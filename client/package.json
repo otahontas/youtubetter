@@ -13,7 +13,7 @@
   },
   "scripts": {
     "start": "docker-compose up",
-    "start:dev": "NODE_ENV=development \"CHOKIDAR_USEPOLLING=true react-scripts start\" ",
+    "start:dev": "NODE_ENV=development CHOKIDAR_USEPOLLING=true react-scripts start ",
     "reset": "docker-compose down -v && docker-compose up --build",
     "build": "react-scripts build",
     "test": "react-scripts test",
