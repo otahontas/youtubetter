@@ -1,0 +1,17 @@
+version: '3.5'
+
+services:
+  app:
+    build:
+      context: ./
+      dockerfile: ./Dockerfile
+    image: youtubetter_dev
+    volumes:
+      - ./:/usr/src/app
+      - nodemod:/usr/src/app/node_modules/
+    ports:
+      - 3000:3000
+    container_name: youtubetter_dev
+
+volumes:
+  nodemod:
