@@ -10,10 +10,10 @@ Tools you need:
 - yarn or npm
 - node
 
-Install with `yarn install`.
+Install with `npm install`.
 
-Run development version with `yarn run dev`. Server now runs in port 8080.
+Run development version with `npm run dev`. Server now runs in port 8080.
 
 ## Production
 
-Run production version with `yarn start`. Server now runs in port 8080.
+Run production version with `npm start`. Server now runs in port 8080.
