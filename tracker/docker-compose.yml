@@ -1,0 +1,9 @@
+
+
+services:
+  tracker:
+    build:
+      context: .
+    container_name: youtubetter-tracker
+    ports:
+      - 8080:8080

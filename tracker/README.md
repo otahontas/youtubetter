@@ -16,4 +16,10 @@ Run development version with `npm run dev`. Server now runs in port 8080.
 
 ## Production
 
-Run production version with `npm start`. Server now runs in port 8080.
+Tools you need:
+
+- Docker
+- Docker-compose
+
+Build and start service detached by running `docker-compose up -d`. Server starts in
+localhost port 8080. When you need to build a new version, run `docker-compose build`.
