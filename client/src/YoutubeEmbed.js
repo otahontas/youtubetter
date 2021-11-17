@@ -1,15 +1,32 @@
-const YoutubeEmbed = ({ embedId }) => (
-  <div>
-    <iframe
-      width="853"
-      height="480"
-      src={`https://www.youtube.com/embed/${embedId}`}
-      frameBorder="0"
-      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-      allowFullScreen
-      title="Embedded youtube"
-    />
-  </div>
-)
+import YouTube from 'react-youtube';
+import { useState } from 'react';
+
+const YoutubeEmbed = ({ embedId }) => {
+  const [player, setPlayer] = useState(null)
+
+  const playerOpts = {
+    width: 853,
+    height: 480,
+    playerVars: {
+      controls: 0,
+      disablekb: 1
+    }
+  }
+
+  return <>
+    <div>
+      <YouTube
+        opts={playerOpts}
+        videoId={embedId}
+        onReady={({ target }) => setPlayer(target)}
+      />
+    </div>
+    <div>
+      <button onClick={() => player.playVideo()}>PLAY</button>
+      <button onClick={() => player.pauseVideo()}>PAUSE</button>
+    </div>
+  </>
+}
+
 
 export default YoutubeEmbed
