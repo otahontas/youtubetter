@@ -27,6 +27,7 @@ const sendMessageToAll = (data, isBinary) => {
 // Add received messages to queue
 wss.on("connection", (ws) => {
   ws.on("message", (data, isBinary) => {
+    console.log("got message", data)
     q.push(sendMessageToAll(data, isBinary));
   });
 });
