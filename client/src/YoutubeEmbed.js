@@ -1,15 +1,49 @@
 import YouTube from 'react-youtube';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useInterval } from './hooks';
-import ws from './websocket'
+import socket from './websocket'
+
+const CLIENT_ID = Math.floor(Math.random() * 100)
 
 const YoutubeEmbed = ({ embedId }) => {
   const [player, setPlayer] = useState(null)
+  const [ready, setReady] = useState(false)
+
+  socket.addEventListener('message', ({ data }) => {
+    try {
+      const { tc, status, clientReady, clientId } = JSON.parse(data)
+      if (clientId === CLIENT_ID) return // don't seek video when got own message
+      console.log({tc, status, clientReady, clientId})
+      if (tc && getTCDiff(tc) > 1)
+        player.seekTo(tc, true)
+
+      if (status === 1 && player.getPlayerState() !== 1)
+        player.playVideo()
+    } catch {
+      // lul
+    }
+  })
+
+  useEffect(() => {
+    if (!ready && player && player.getCurrentTime() === 0) {
+      player.seekTo(0, true)
+      setReady(true)
+    }
+  }, [player, ready])
 
   const getTC = () => player && player.getCurrentTime()
-  const sendTC = () => ws.readyState === WebSocket.OPEN ? ws.send(getTC()) : null
+  const getTCDiff = (tc) => Math.abs(player.getCurrentTime() - tc)
+  const sendTC = () => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return
+    socket.send(JSON.stringify({
+      tc: getTC(),
+      status: player ? player.getPlayerState() : -1,
+      clientReady: ready,
+      clientId: CLIENT_ID
+    }))
+  }
 
-  useInterval(sendTC, 1000)
+  useInterval(sendTC, 2000)
 
   const playerOpts = {
     width: 853,

@@ -5,8 +5,4 @@ socket.addEventListener('open', () => {
     socket.send('ping')
 })
 
-socket.addEventListener('message', (event) => {
-    console.log('Message from server ', event.data)
-})
-
 export default socket
