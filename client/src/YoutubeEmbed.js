@@ -8,12 +8,34 @@ const CLIENT_ID = Math.floor(Math.random() * 100)
 const YoutubeEmbed = ({ embedId }) => {
   const [player, setPlayer] = useState(null)
   const [ready, setReady] = useState(false)
+  const [interval, setInterval] = useState(2000)
 
   socket.addEventListener('message', ({ data }) => {
     try {
       const { tc, status, clientReady, clientId } = JSON.parse(data)
-      if (clientId === CLIENT_ID) return // don't seek video when got own message
+      if (clientId === CLIENT_ID || !player) return // don't seek video when got own message
       console.log({tc, status, clientReady, clientId})
+      switch(status) {
+        case 'PAUSE': {
+          player.seekTo(tc, true)
+          player.pauseVideo()
+          break
+        }
+        case 'PLAY': {
+          player.seekTo(tc, true)
+          player.playVideo()
+          break
+        }
+        case 1: {
+          if (tc && getTCDiff(tc) > 1)
+            player.seekTo(tc, true)
+          if (player.getPlayerState() !== 1)
+            player.playVideo()
+          break
+        }
+        default:
+          break
+      }
       if (tc && getTCDiff(tc) > 1)
         player.seekTo(tc, true)
 
@@ -32,7 +54,7 @@ const YoutubeEmbed = ({ embedId }) => {
   }, [player, ready])
 
   const getTC = () => player && player.getCurrentTime()
-  const getTCDiff = (tc) => Math.abs(player.getCurrentTime() - tc)
+  const getTCDiff = (tc) => tc - player.getCurrentTime()
   const sendTC = () => {
     if (!socket || socket.readyState !== WebSocket.OPEN) return
     socket.send(JSON.stringify({
@@ -42,8 +64,24 @@ const YoutubeEmbed = ({ embedId }) => {
       clientId: CLIENT_ID
     }))
   }
+  const sendPause = () => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return
+    socket.send(JSON.stringify({
+      tc: getTC(),
+      status: 'PAUSE',
+      clientId: CLIENT_ID
+    }))
+  }
+  const sendPlay = () => {
+    if (!socket || socket.readyState !== WebSocket.OPEN) return
+    socket.send(JSON.stringify({
+      tc: getTC(),
+      status: 'PLAY',
+      clientId: CLIENT_ID
+    }))
+  }
 
-  useInterval(sendTC, 2000)
+  useInterval(sendTC, interval)
 
   const playerOpts = {
     width: 853,
@@ -63,8 +101,17 @@ const YoutubeEmbed = ({ embedId }) => {
       />
     </div>
     <div>
-      <button onClick={() => player.playVideo()}>PLAY</button>
-      <button onClick={() => player.pauseVideo()}>PAUSE</button>
+      Please use the buttons bellow<br/>
+      <button onClick={() => {
+        sendPlay()
+        setInterval(2000)
+        player.playVideo()}
+        }>PLAY</button>
+      <button onClick={() => {
+        sendPause()
+        setInterval(null)
+        player.pauseVideo()}
+      }>PAUSE</button>
     </div>
   </>
 }
