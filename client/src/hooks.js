@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 
+// Use interval hook
 export function useInterval(callback, delay) {
   const savedCallback = useRef();
 
