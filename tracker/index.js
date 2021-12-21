@@ -1,6 +1,5 @@
 import WebSocket, { WebSocketServer } from "ws";
 import queue from "queue";
-require("dotenv").config();
 
 // Configuration. Give env variables in either .env file or via settings environment
 // variables
