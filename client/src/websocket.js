@@ -1,5 +1,6 @@
 // Open connection to the tracker
-const socket = new WebSocket('ws://localhost:8080')
+import { trackerUrl } from './config'
+const socket = new WebSocket(trackerUrl)
 
 socket.addEventListener('open', () => {
     console.log("connected to tracker")
