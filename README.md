@@ -23,7 +23,7 @@ docker-compose up
 
 Open new terminal:
 ```bash
-cd tracker
+cd client
 npm start
 ```
 
