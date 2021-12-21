@@ -4,7 +4,7 @@ services:
   app:
     build:
       context: ./
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile.dev
     image: youtubetter_dev
     volumes:
       - ./:/usr/src/app

@@ -1,5 +1,5 @@
 // Open connection to the tracker
-import { trackerUrl } from './config'
+import { trackerUrl } from './conf'
 const socket = new WebSocket(trackerUrl)
 
 socket.addEventListener('open', () => {
