@@ -53,3 +53,17 @@ wss.on("connection", (ws) => {
     messageQueue.push(sendMessageToAll(data, isBinary));
   });
 });
+
+// Update client amount to clients
+const updateIntervalInSeconds = 1;
+const updateClientAmountInterval = setInterval(() => {
+  messageQueue.push(
+    sendMessageToAll(JSON.stringify({ clients: wss.clients.size }), false)
+  );
+}, updateIntervalInSeconds * 1000);
+
+// Cleanup when server closed
+wss.on("close", () => {
+  console.log("Server closed");
+  clearInterval(updateClientAmountInterval);
+});

@@ -1,104 +1,111 @@
-import YouTube from 'react-youtube';
-import { useEffect, useState } from 'react';
-import { useInterval } from './hooks';
-import socket from './websocket'
+import YouTube from "react-youtube";
+import { useEffect, useState } from "react";
+import { useInterval } from "./hooks";
+import socket from "./websocket";
 
 // Generate id for client
-const CLIENT_ID = Math.floor(Math.random() * 100)
+const CLIENT_ID = Math.floor(Math.random() * 100);
 
 const YoutubeEmbed = ({ embedId }) => {
-  const [player, setPlayer] = useState(null)
+  const [player, setPlayer] = useState(null);
   // Is client ready, that is the player is initialized and buffered
-  const [ready, setReady] = useState(false)
-  const [interval, setInterval] = useState(2000)
+  const [ready, setReady] = useState(false);
+  const [interval, setInterval] = useState(2000);
+  const [watchers, setWatchers] = useState(1); // def to watcher itself
 
   // Listen for messages from the tracker
-  socket.addEventListener('message', ({ data }) => {
+  socket.addEventListener("message", ({ data }) => {
     try {
-      const { tc, status, clientReady, clientId } = JSON.parse(data)
-      if (clientId === CLIENT_ID || !player) return // don't seek video when got own message
-      console.log({ tc, status, clientReady, clientId })
+      const parsed = JSON.parse(data);
+      if (parsed?.clients) {
+        setWatchers(parseInt(parsed.clients, 10));
+        return;
+      }
+      const { tc, status, clientReady, clientId } = parsed;
+      if (clientId === CLIENT_ID || !player) return; // don't seek video when got own message
       switch (status) {
         // In case of pause command pause the player and seek to given time
-        case 'PAUSE': {
-          player.seekTo(tc, true)
-          player.pauseVideo()
-          break
+        case "PAUSE": {
+          player.seekTo(tc, true);
+          player.pauseVideo();
+          break;
         }
         // In case of play command play the player and seek to given time
-        case 'PLAY': {
-          player.seekTo(tc, true)
-          player.playVideo()
-          break
+        case "PLAY": {
+          player.seekTo(tc, true);
+          player.playVideo();
+          break;
         }
         // Normal periodic message
         // If the time is greater that 1s from local player, seek the local
         // player to time form the message. If the local player is paused play the video
         case 1: {
-          if (tc && getTCDiff(tc) > 1)
-            player.seekTo(tc, true)
-          if (player.getPlayerState() !== 1)
-            player.playVideo()
-          break
+          if (tc && getTCDiff(tc) > 1) player.seekTo(tc, true);
+          if (player.getPlayerState() !== 1) player.playVideo();
+          break;
         }
         default:
-          break
+          break;
       }
-      if (tc && getTCDiff(tc) > 1)
-        player.seekTo(tc, true)
+      if (tc && getTCDiff(tc) > 1) player.seekTo(tc, true);
 
-      if (status === 1 && player.getPlayerState() !== 1)
-        player.playVideo()
+      if (status === 1 && player.getPlayerState() !== 1) player.playVideo();
     } catch {
       // lul
     }
-  })
+  });
 
   // When player is initialized buffer it to zero and wait for commands
   useEffect(() => {
     if (!ready && player && player.getCurrentTime() === 0) {
-      player.seekTo(0, true)
-      setReady(true)
+      player.seekTo(0, true);
+      setReady(true);
     }
-  }, [player, ready])
+  }, [player, ready]);
 
   // Get local player time
-  const getTC = () => player && player.getCurrentTime()
+  const getTC = () => player && player.getCurrentTime();
 
   // Get diff to local player from given time
-  const getTCDiff = (tc) => tc - player.getCurrentTime()
+  const getTCDiff = (tc) => tc - player.getCurrentTime();
 
   // Send current time of local player
   const sendTC = () => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return
-    socket.send(JSON.stringify({
-      tc: getTC(),
-      status: player ? player.getPlayerState() : -1,
-      clientReady: ready,
-      clientId: CLIENT_ID
-    }))
-  }
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(
+      JSON.stringify({
+        tc: getTC(),
+        status: player ? player.getPlayerState() : -1,
+        clientReady: ready,
+        clientId: CLIENT_ID,
+      })
+    );
+  };
   // Send pause command
   const sendPause = () => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return
-    socket.send(JSON.stringify({
-      tc: getTC(),
-      status: 'PAUSE',
-      clientId: CLIENT_ID
-    }))
-  }
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(
+      JSON.stringify({
+        tc: getTC(),
+        status: "PAUSE",
+        clientId: CLIENT_ID,
+      })
+    );
+  };
   // Send play command
   const sendPlay = () => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) return
-    socket.send(JSON.stringify({
-      tc: getTC(),
-      status: 'PLAY',
-      clientId: CLIENT_ID
-    }))
-  }
+    if (!socket || socket.readyState !== WebSocket.OPEN) return;
+    socket.send(
+      JSON.stringify({
+        tc: getTC(),
+        status: "PLAY",
+        clientId: CLIENT_ID,
+      })
+    );
+  };
 
   // Send periodically current time and status of player
-  useInterval(sendTC, interval)
+  useInterval(sendTC, interval);
 
   // Youtube embed options
   const playerOpts = {
@@ -106,36 +113,49 @@ const YoutubeEmbed = ({ embedId }) => {
     height: 480,
     playerVars: {
       controls: 0,
-      disablekb: 1
-    }
-  }
+      disablekb: 1,
+    },
+  };
 
-  return <>
-    <div>
-      <YouTube
-        opts={playerOpts}
-        videoId={embedId}
-        // Save player to local variable
-        onReady={({ target }) => setPlayer(target)}
-      />
-    </div>
-    <div>
-      Please use the buttons bellow<br />
-      <button onClick={() => {
-        sendPlay()
-        setInterval(2000)
-        player.playVideo()
-      }
-      }>PLAY</button>
-      <button onClick={() => {
-        sendPause()
-        setInterval(null)
-        player.pauseVideo()
-      }
-      }>PAUSE</button>
-    </div>
-  </>
-}
+  return (
+    <>
+      <div>
+        <YouTube
+          opts={playerOpts}
+          videoId={embedId}
+          // Save player to local variable
+          onReady={({ target }) => setPlayer(target)}
+        />
+      </div>
+      <div>
+        Please use the buttons bellow
+        <br />
+        <button
+          onClick={() => {
+            sendPlay();
+            setInterval(2000);
+            player.playVideo();
+          }}
+        >
+          PLAY
+        </button>
+        <button
+          onClick={() => {
+            sendPause();
+            setInterval(null);
+            player.pauseVideo();
+          }}
+        >
+          PAUSE
+        </button>
+      </div>
+      <div>
+        <h2>
+          Currently watching: {watchers} person{watchers > 1 && "s"}
+        </h2>
+      </div>
+    </>
+  );
+};
 
-
-export default YoutubeEmbed
+export default YoutubeEmbed;
