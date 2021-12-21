@@ -1,6 +1,9 @@
 import WebSocket, { WebSocketServer } from "ws";
 import queue from "queue";
 
+// Set to true to enable debugging
+const DEBUG = false;
+
 const wss = new WebSocketServer({ port: 8080 });
 const q = queue({ results: [] });
 // Log when stuff happens in queue
@@ -25,9 +28,15 @@ const sendMessageToAll = (data, isBinary) => {
 };
 
 // Add received messages to queue
+const randomTimeout = () => Math.floor(Math.random() * 10000);
+const waitForRandomTime = () => setTimeout(async () => {}, randomTimeout());
+
 wss.on("connection", (ws) => {
   ws.on("message", (data, isBinary) => {
-    console.log("got message", data.toString())
+    console.log("got message", data.toString());
+    if (DEBUG) {
+      waitForRandomTime();
+    }
     q.push(sendMessageToAll(data, isBinary));
   });
 });
