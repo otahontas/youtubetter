@@ -57,6 +57,7 @@ wss.on("connection", (ws) => {
 // Update client amount to clients
 const updateIntervalInSeconds = 1;
 const updateClientAmountInterval = setInterval(() => {
+  console.log("Client amount: ", wss.clients.size);
   messageQueue.push(
     sendMessageToAll(JSON.stringify({ clients: wss.clients.size }), false)
   );
